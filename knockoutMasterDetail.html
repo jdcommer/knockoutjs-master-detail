@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Knockout Tryout</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript" src="js/knockout-2.1.0.debug.js"></script>
+    <script type="text/javascript">
+        var tryout = {
+            items:[
+                {label:"Item 1", options:[
+                    {option:"a"},
+                    {option:"b"},
+                    {option:"c"},
+                    {option:"d"}
+                ]},
+                {label:"Item 2", options:[
+                    {option:"ab"},
+                    {option:"bc"}
+                ]},
+                {label:"Item 3", options:[]},
+                {label:"Item 4", options:[
+                    {option:"a"}
+                ]
+                }
+            ],
+            comments:[
+                {comment:"Olala", author:"su"},
+                {comment:"Mohow", author:"su"},
+                {comment:"Lorem", author:"us"},
+                {comment:"Dinges", author:"us"},
+                {comment:"Comment", author:"su"}
+            ]
+        };
+
+
+        var ItemsModel = function (items) {
+            var self = this;
+            self.items = ko.observableArray(ko.utils.arrayMap(items, function (item) {
+                return { label:item.label, options:ko.observableArray(item.options) };
+            }));
+
+            self.addItem = function () {
+                var newItem = {
+                    label:"qsdf",
+                    options:ko.observableArray()
+                }
+                self.items.push(newItem);
+                self.selectedItem(newItem)
+            };
+
+            self.upItem = function () {
+                var index = self.items.indexOf(this);
+                var newIndex = index - 1;
+                if (newIndex >= 0) {
+                    self.items.splice(index, 1);
+                    self.items.splice(newIndex, 0, this);
+                } else {
+                    alert("no can do")
+                }
+            };
+
+            self.downItem = function () {
+                var index = self.items.indexOf(this);
+                var newIndex = index + 1;
+                if (newIndex < self.items().length) {
+                    self.items.splice(index, 1);
+                    self.items.splice(newIndex, 0, this);
+                } else {
+                    alert("no can do")
+                }
+            };
+
+            self.removeItem = function (item) {
+                if (self.selectedItem() === item) {
+                    self.selectedItem(null)
+                }
+                self.items.remove(item);
+            };
+
+            self.addOption = function (item) {
+                self.selectedItem().options.push({
+                    option:"new option"
+                });
+            };
+
+            self.removeOption = function (option) {
+                    self.selectedItem().options.remove(option)
+            };
+
+            self.save = function () {
+                self.lastSavedJson(JSON.stringify(ko.toJS(self.items), null, 2));
+            };
+
+            self.setSelectedItem = function () {
+                self.selectedItem(this);
+            };
+
+            self.selectedItem = ko.observable(null);
+
+            self.lastSavedJson = ko.observable("")
+        };
+
+        var CommentsModel = function (comments) {
+            var self = this;
+
+            self.comments = ko.observableArray(ko.utils.arrayMap(comments, function (comment) {
+                return {comment:comment.comment, author:comment.author}
+            }))
+        };
+
+        $(function () {
+            ko.applyBindings(new ItemsModel(tryout.items), $("#itemContainer").get(0));
+            ko.applyBindings(new CommentsModel(tryout.comments), $("#commentsContainer").get(0))
+        });
+    </script>
+</head>
+<body>
+
+<div id="itemContainer">
+    <ul data-bind="foreach: items">
+        <li>
+            <a href="#" data-bind="click: $parent.setSelectedItem"><span data-bind="text: label"></span></a>
+            <a href="#" data-bind="click: $parent.removeItem">Delete</span></a>
+            <a href="#" data-bind="click: $parent.upItem">Up</span></a>
+            <a href="#" data-bind="click: $parent.downItem">Down</span></a>
+        </li>
+    </ul>
+
+    <input type="button" data-bind="click: addItem" value="Add item"/>
+
+    <div data-bind="visible: selectedItem">
+        <div data-bind="with: selectedItem">
+            <span data-bind="text: label"></span>
+            <ul data-bind="foreach: options">
+                <li>
+                    <span data-bind="text: option"></span>
+                    <a href="#" data-bind="click: removeOption">Delete</span></a>
+                </li>
+            </ul>
+        </div>
+
+        <input type="button" data-bind="click: addOption" value="Add option"/>
+    </div>
+
+
+    <div data-bind="visible: selectedItem() === null">
+        No selection was made
+    </div>
+</div>
+<hr/>
+<div id="commentsContainer">
+    <ul data-bind="foreach: comments">
+        <li>
+            <p data-bind="text: comment"></p>
+            <span data-bind="text: author"></span>
+        </li>
+    </ul>
+</div>
+</body>
+</html>
